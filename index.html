@@ -91,17 +91,12 @@
                         <input type="date" id="entry-date">
                     </div>
 
-                    <div id="payment-status-group" class="form-group hidden">
-                        <label class="toggle-label">
-                            <span>Ödeme Yapıldı mı?</span>
-                            <input type="checkbox" id="entry-paid" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
+                    <input type="hidden" id="editing-id">
 
                     <button id="save-entry-btn" class="primary-btn">
                         <i class="ph ph-check-circle"></i> Kaydet
                     </button>
+                    <button id="cancel-edit-btn" class="secondary-btn hidden">Vazgeç</button>
                 </div>
             </section>
 

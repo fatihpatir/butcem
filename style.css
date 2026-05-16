@@ -121,17 +121,85 @@ h1 { font-size: 22px; font-weight: 700; }
 input:checked + .slider { background: var(--income); }
 input:checked + .slider:before { transform: translateX(20px); }
 
+.secondary-btn {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
 .primary-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
 
 /* List Item */
-.entry-item { background: var(--card-bg); padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.entry-info { display: flex; flex-direction: column; gap: 2px; }
-.entry-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.entry-item { 
+    background: var(--card-bg); 
+    padding: 15px; 
+    border-radius: 16px; 
+    margin-bottom: 10px; 
+    border: 1px solid var(--border); 
+    display: flex; 
+    align-items: center;
+    gap: 12px;
+}
+
+.status-tick {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.status-tick.unpaid {
+    border: 2px solid var(--expense);
+    color: var(--expense);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.status-tick.paid {
+    border: 2px solid var(--income);
+    color: var(--income);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.entry-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.entry-title { font-weight: 600; font-size: 14px; }
 .entry-date { font-size: 10px; color: var(--text-muted); }
-.entry-amount { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; text-align: right; }
+
+.entry-amount-actions {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.entry-amount { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; }
 .entry-amount.income { color: var(--income); }
 .entry-amount.expense { color: var(--expense); }
-.unpaid-badge { font-size: 9px; background: rgba(251, 191, 36, 0.1); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+.entry-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.action-btn:hover { color: var(--primary); }
+.action-btn.delete:hover { color: var(--expense); }
+
+.unpaid-badge { font-size: 9px; color: var(--warning); margin-top: 2px; font-weight: 600; }
 
 /* Monthly Summary */
 .monthly-card { background: var(--card-bg); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }

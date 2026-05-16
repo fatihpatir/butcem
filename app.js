@@ -58,8 +58,11 @@ function initApp() {
         };
     });
 
-    // Save Entry
-    document.getElementById('save-entry-btn').onclick = saveEntry;
+    // Save / Update Entry
+    document.getElementById('save-entry-btn').onclick = saveOrUpdateEntry;
+    
+    // Cancel Edit
+    document.getElementById('cancel-edit-btn').onclick = cancelEdit;
 
     // Filters
     document.getElementById('month-filter').onchange = renderList;
@@ -85,38 +88,86 @@ function applyTheme(theme) {
 
 // --- Core Logic ---
 
-function saveEntry() {
+function saveOrUpdateEntry() {
     const amount = parseFloat(document.getElementById('entry-amount').value);
     const desc = document.getElementById('entry-desc').value.trim();
     const date = document.getElementById('entry-date').value;
-    const isPaid = document.getElementById('entry-paid').checked;
+    const editingId = document.getElementById('editing-id').value;
 
     if (!amount || !desc || !date) return alert("Hocam tüm alanları dolduralım.");
 
-    const entry = {
-        id: Date.now(),
-        type: currentType,
-        amount: amount,
-        desc: desc,
-        date: date,
-        isPaid: currentType === 'income' ? true : isPaid
-    };
+    if (editingId) {
+        // Güncelleme
+        const idx = entries.findIndex(e => e.id == editingId);
+        if (idx > -1) {
+            entries[idx] = { ...entries[idx], amount, desc, date };
+        }
+        cancelEdit();
+    } else {
+        // Yeni Kayıt
+        const entry = {
+            id: Date.now(),
+            type: currentType,
+            amount: amount,
+            desc: desc,
+            date: date,
+            isPaid: currentType === 'income' ? true : false
+        };
+        entries.unshift(entry);
+    }
 
-    entries.unshift(entry);
     entries.sort((a, b) => new Date(b.date) - new Date(a.date));
     storage.set('budge_v2_entries', entries);
 
     // Feedback
     const btn = document.getElementById('save-entry-btn');
-    btn.innerHTML = '<i class="ph ph-check"></i> Kaydedildi!';
+    btn.innerHTML = '<i class="ph ph-check"></i> Tamamlandı!';
     setTimeout(() => {
-        btn.innerHTML = '<i class="ph ph-check-circle"></i> Kaydet';
-        document.getElementById('entry-amount').value = '';
-        document.getElementById('entry-desc').value = '';
+        btn.innerHTML = editingId ? '<i class="ph ph-check-circle"></i> Güncelle' : '<i class="ph ph-check-circle"></i> Kaydet';
+        if (!editingId) {
+            document.getElementById('entry-amount').value = '';
+            document.getElementById('entry-desc').value = '';
+        }
     }, 1500);
 
     renderStats();
     renderReminders();
+    if (!document.getElementById('list-page').classList.contains('hidden')) renderList();
+}
+
+function editEntry(id) {
+    const entry = entries.find(e => e.id == id);
+    if (!entry) return;
+
+    document.getElementById('entry-amount').value = entry.amount;
+    document.getElementById('entry-desc').value = entry.desc;
+    document.getElementById('entry-date').value = entry.date;
+    document.getElementById('editing-id').value = entry.id;
+
+    // UI Değişikliği
+    document.getElementById('save-entry-btn').innerHTML = '<i class="ph ph-pencil"></i> Güncelle';
+    document.getElementById('cancel-edit-btn').classList.remove('hidden');
+
+    // "Ekle" sayfasına yönlendir
+    document.querySelector('[data-page="add-page"]').click();
+}
+
+function cancelEdit() {
+    document.getElementById('editing-id').value = '';
+    document.getElementById('entry-amount').value = '';
+    document.getElementById('entry-desc').value = '';
+    document.getElementById('save-entry-btn').innerHTML = '<i class="ph ph-check-circle"></i> Kaydet';
+    document.getElementById('cancel-edit-btn').classList.add('hidden');
+}
+
+function deleteEntry(id) {
+    if (confirm("Bu kaydı silmek istediğinden emin misin Kral?")) {
+        entries = entries.filter(e => e.id != id);
+        storage.set('budge_v2_entries', entries);
+        renderStats();
+        renderReminders();
+        renderList();
+    }
 }
 
 function renderStats() {
@@ -201,28 +252,39 @@ function renderList() {
         div.className = 'entry-item';
         
         let subText = '';
-        if (e.type === 'expense' && !e.isPaid) {
-            const diff = Math.ceil((new Date(e.date) - new Date()) / (1000 * 60 * 60 * 24));
-            subText = `<span class="unpaid-badge"><i class="ph ph-clock"></i> ${diff <= 0 ? 'Vadesi Geçti' : diff + ' gün kaldı'}</span>`;
-        } else if (e.type === 'expense') {
-            subText = `<span style="font-size:9px; color:var(--income)"><i class="ph ph-check-circle"></i> Ödendi</span>`;
+        let statusIcon = '';
+        
+        if (e.type === 'expense') {
+            if (!e.isPaid) {
+                const diff = Math.ceil((new Date(e.date) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
+                subText = `<span class="unpaid-badge">${diff <= 0 ? 'Vadesi Geçti' : diff + ' gün kaldı'}</span>`;
+                statusIcon = `<div class="status-tick unpaid" onclick="event.stopPropagation(); togglePaid(${e.id})"><i class="ph ph-circle"></i></div>`;
+            } else {
+                subText = `<span style="font-size:9px; color:var(--income); font-weight:600;">Ödendi</span>`;
+                statusIcon = `<div class="status-tick paid" onclick="event.stopPropagation(); togglePaid(${e.id})"><i class="ph-fill ph-check-circle"></i></div>`;
+            }
+        } else {
+            // Gelir ise ikon gösterme veya farklı bir şey göster
+            statusIcon = `<div class="status-tick" style="color:var(--income); opacity:0.5; cursor:default;"><i class="ph ph-trend-up"></i></div>`;
         }
 
         div.innerHTML = `
+            ${statusIcon}
             <div class="entry-info">
                 <span class="entry-title">${e.desc}</span>
                 <span class="entry-date">${new Date(e.date).toLocaleDateString('tr-TR')}</span>
                 ${subText}
             </div>
-            <div class="entry-amount ${e.type}">
-                ${e.type === 'income' ? '+' : '-'}${formatCurrency(e.amount)}
+            <div class="entry-amount-actions">
+                <div class="entry-amount ${e.type}">
+                    ${e.type === 'income' ? '+' : '-'}${formatCurrency(e.amount)}
+                </div>
+                <div class="entry-actions">
+                    <i class="ph ph-pencil action-btn" onclick="editEntry(${e.id})"></i>
+                    <i class="ph ph-trash action-btn delete" onclick="deleteEntry(${e.id})"></i>
+                </div>
             </div>
         `;
-        
-        // Ödeme durumunu değiştirmek için tıklama (Gider ise)
-        if (e.type === 'expense') {
-            div.onclick = () => togglePaid(e.id);
-        }
         
         listContainer.appendChild(div);
     });
