@@ -15,6 +15,22 @@ let viewDate = new Date(); // Global görüntüleme tarihi
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     applyTheme(currentTheme);
+    
+    // Service Worker Kaydı
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+            reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // Yeni sürüm hazır, otomatik yenile
+                        window.location.reload();
+                    }
+                };
+            };
+        });
+    }
+
     setupPWA();
 });
 

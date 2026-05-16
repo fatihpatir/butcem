@@ -1,4 +1,4 @@
-const CACHE_NAME = 'budge-v5-' + Date.now();
+const CACHE_NAME = 'budge-v6-' + Date.now();
 const ASSETS = [
     './',
     './index.html',
