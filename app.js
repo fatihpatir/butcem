@@ -251,7 +251,9 @@ function renderStats() {
 
 function renderReminders() {
     const container = document.getElementById('reminder-container');
+    if (!container) return;
     container.innerHTML = '';
+    
     const unpaid = entries.filter(e => e.type === 'expense' && !e.isPaid);
     if (unpaid.length === 0) return;
 
@@ -259,12 +261,21 @@ function renderReminders() {
     const next = unpaid[0];
     const diff = Math.ceil((new Date(next.date) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
 
-    let msg = `Gelecek Ödeme: <strong>${next.desc}</strong>`;
-    if (diff === 0) msg += " (Bugün Son Gün!) ⚠️";
-    else if (diff < 0) msg += ` (${Math.abs(diff)} gün gecikti!) ❌`;
-    else msg += ` (${diff} gün kaldı) ⏳`;
+    let urgencyClass = '';
+    let msg = `<strong>${next.desc}</strong> ödemesine `;
 
-    container.innerHTML = `<div class="reminder-card"><i class="ph-fill ph-bell-ringing"></i><div>${msg}</div></div>`;
+    if (diff === 0) {
+        msg += "<strong>bugün son gün!</strong> ⚠️";
+        urgencyClass = 'urgent';
+    } else if (diff < 0) {
+        msg = `<strong>${next.desc}</strong> ödemesi <strong>${Math.abs(diff)} gün gecikti!</strong> ❌`;
+        urgencyClass = 'overdue';
+    } else {
+        msg += `<strong>${diff} gün kaldı</strong> ⏳`;
+        if (diff <= 3) urgencyClass = 'warning';
+    }
+
+    container.innerHTML = `<div class="reminder-card ${urgencyClass}"><i class="ph-fill ph-bell-ringing"></i><div>${msg}</div></div>`;
 }
 
 function renderList() {

@@ -123,6 +123,9 @@ h1 { font-size: 22px; font-weight: 700; }
     display: flex; align-items: center; gap: 12px;
     color: var(--warning); font-size: 13px; font-weight: 600;
 }
+.reminder-card.warning { background: rgba(251, 191, 36, 0.2); border-color: var(--warning); }
+.reminder-card.urgent { background: rgba(249, 115, 22, 0.2); border-color: #f97316; color: #f97316; }
+.reminder-card.overdue { background: rgba(239, 68, 68, 0.15); border-color: var(--expense); color: var(--expense); }
 .reminder-card i { font-size: 24px; }
 
 /* Stats */
