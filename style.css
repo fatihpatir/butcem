@@ -85,7 +85,11 @@ h1 { font-size: 22px; font-weight: 700; }
 .stat-card {
     background: var(--card-bg); padding: 12px 5px; border-radius: 16px;
     border: 1px solid var(--border); text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
+.stat-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+.stat-card:active { transform: scale(0.95); }
 .stat-card label { display: block; font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
 .stat-card span { font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif; }
 .stat-card.income span { color: var(--income); }

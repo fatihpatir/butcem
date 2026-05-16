@@ -8,6 +8,7 @@ const storage = {
 let entries = storage.get('budge_v2_entries', []);
 let currentType = 'income';
 let currentTheme = storage.get('budge_v1_theme', 'theme-indigo');
+let listTypeFilter = 'all'; // 'all', 'income', 'expense'
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -59,7 +60,10 @@ function initApp() {
             btn.classList.add('active');
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById(btn.dataset.page).classList.remove('hidden');
-            if (btn.dataset.page === 'list-page') renderList();
+            if (btn.dataset.page === 'list-page') {
+                listTypeFilter = 'all'; // Tabdan girince filtreyi sıfırla
+                renderList();
+            }
             if (btn.dataset.page === 'summary-page') renderSummary();
         });
     });
@@ -96,6 +100,16 @@ function initApp() {
             storage.set('budge_v2_entries', entries);
             location.reload();
         }
+    };
+
+    // Stat Card Clicks (Quick Filter)
+    document.querySelector('.stat-card.income').onclick = () => {
+        listTypeFilter = 'income';
+        document.querySelector('[data-page="list-page"]').click();
+    };
+    document.querySelector('.stat-card.expense').onclick = () => {
+        listTypeFilter = 'expense';
+        document.querySelector('[data-page="list-page"]').click();
     };
 
     renderStats();
@@ -240,7 +254,13 @@ function renderList() {
         filter.value = currentVal || 'all';
     }
 
-    const filtered = filter.value === 'all' ? entries : entries.filter(e => e.date.startsWith(filter.value));
+    let filtered = filter.value === 'all' ? entries : entries.filter(e => e.date.startsWith(filter.value));
+    
+    // Tip Filtresi Uygula (Gelir/Gider Kartından gelindiyse)
+    if (listTypeFilter !== 'all') {
+        filtered = filtered.filter(e => e.type === listTypeFilter);
+    }
+
     listContainer.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding:50px; color:var(--text-muted)">Kayıt yok.</div>' : '';
 
     filtered.forEach(e => {
