@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             };
         });
+        
+        // Yeni sürüm devreye girdiğinde sayfayı yenile
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+        });
     }
 
     setupPWA();
