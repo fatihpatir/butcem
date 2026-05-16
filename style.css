@@ -46,6 +46,40 @@ header { margin-bottom: 25px; }
 h1 { font-size: 22px; font-weight: 700; }
 .highlight { color: var(--primary); }
 
+/* Global Month Selector */
+.global-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.nav-month-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    color: var(--primary);
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s;
+}
+
+.nav-month-btn:active { transform: scale(0.9); }
+
+.current-month-display {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+}
+
 .header-btns { display: flex; gap: 10px; }
 .icon-btn {
     background: var(--card-bg); border: 1px solid var(--border); color: var(--text);

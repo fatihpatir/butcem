@@ -8,7 +8,8 @@ const storage = {
 let entries = storage.get('budge_v2_entries', []);
 let currentType = 'income';
 let currentTheme = storage.get('budge_v1_theme', 'theme-indigo');
-let listTypeFilter = 'all'; // 'all', 'income', 'expense'
+let listTypeFilter = 'all'; 
+let viewDate = new Date(); // Global görüntüleme tarihi
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -90,8 +91,15 @@ function initApp() {
     document.getElementById('save-entry-btn').onclick = saveOrUpdateEntry;
     document.getElementById('cancel-edit-btn').onclick = cancelEdit;
 
-    // Filters
-    document.getElementById('month-filter').onchange = renderList;
+    // Global Month Nav
+    document.getElementById('prev-month').onclick = () => {
+        viewDate.setMonth(viewDate.getMonth() - 1);
+        updateView();
+    };
+    document.getElementById('next-month').onclick = () => {
+        viewDate.setMonth(viewDate.getMonth() + 1);
+        updateView();
+    };
 
     // Global Reset
     document.getElementById('reset-data-btn').onclick = () => {
@@ -112,8 +120,14 @@ function initApp() {
         document.querySelector('[data-page="list-page"]').click();
     };
 
+    updateView();
+}
+
+function updateView() {
     renderStats();
     renderReminders();
+    if (!document.getElementById('list-page').classList.contains('hidden')) renderList();
+    if (!document.getElementById('summary-page').classList.contains('hidden')) renderSummary();
 }
 
 function applyTheme(theme) {
@@ -162,7 +176,7 @@ function saveOrUpdateEntry() {
 
     renderStats();
     renderReminders();
-    if (!document.getElementById('list-page').classList.contains('hidden')) renderList();
+    updateView();
 }
 
 function editEntry(id) {
@@ -196,26 +210,24 @@ function deleteEntry(id) {
 }
 
 function renderStats() {
-    let income = 0; let expense = 0;
-    const now = new Date();
-    const currentYM = now.toISOString().substring(0, 7);
+    const currentYM = viewDate.toISOString().substring(0, 7);
+    const monthName = viewDate.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+    document.getElementById('current-view-month').innerText = monthName;
+    document.getElementById('current-month-name').innerText = monthName;
+
     let mIncome = 0; let mExpense = 0;
 
     entries.forEach(e => {
-        if (e.type === 'income') income += e.amount;
-        else expense += e.amount;
         if (e.date.startsWith(currentYM)) {
             if (e.type === 'income') mIncome += e.amount;
             else mExpense += e.amount;
         }
     });
 
-    document.getElementById('total-income').innerText = formatCurrency(income);
-    document.getElementById('total-expense').innerText = formatCurrency(expense);
-    document.getElementById('net-balance').innerText = formatCurrency(income - expense);
+    document.getElementById('total-income').innerText = formatCurrency(mIncome);
+    document.getElementById('total-expense').innerText = formatCurrency(mExpense);
+    document.getElementById('net-balance').innerText = formatCurrency(mIncome - mExpense);
 
-    const monthName = now.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
-    document.getElementById('current-month-name').innerText = monthName;
     const percent = mIncome > 0 ? (mExpense / mIncome) * 100 : 0;
     document.getElementById('progress-fill').style.width = Math.min(percent, 100) + '%';
     document.getElementById('month-percent').innerText = `%${percent.toFixed(0)} Harcandı`;
@@ -241,27 +253,16 @@ function renderReminders() {
 
 function renderList() {
     const listContainer = document.getElementById('entries-list');
-    const filter = document.getElementById('month-filter');
-    
-    if (filter.options.length === 0 || entries.length > filter.options.length - 1) {
-        const months = [...new Set(entries.map(e => e.date.substring(0, 7)))].sort().reverse();
-        const currentVal = filter.value;
-        filter.innerHTML = '<option value="all">Tüm Zamanlar</option>';
-        months.forEach(m => {
-            const dateObj = new Date(m.split('-')[0], m.split('-')[1]-1);
-            filter.innerHTML += `<option value="${m}">${dateObj.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}</option>`;
-        });
-        filter.value = currentVal || 'all';
-    }
+    const currentYM = viewDate.toISOString().substring(0, 7);
 
-    let filtered = filter.value === 'all' ? entries : entries.filter(e => e.date.startsWith(filter.value));
+    let filtered = entries.filter(e => e.date.startsWith(currentYM));
     
     // Tip Filtresi Uygula (Gelir/Gider Kartından gelindiyse)
     if (listTypeFilter !== 'all') {
         filtered = filtered.filter(e => e.type === listTypeFilter);
     }
 
-    listContainer.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding:50px; color:var(--text-muted)">Kayıt yok.</div>' : '';
+    listContainer.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding:50px; color:var(--text-muted)">Bu ay kayıt bulunmuyor.</div>' : '';
 
     filtered.forEach(e => {
         const div = document.createElement('div');
