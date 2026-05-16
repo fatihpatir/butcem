@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bütçe Asistanım</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+</head>
+<body class="theme-indigo">
+    <div id="app">
+        <header>
+            <div class="header-top">
+                <h1>Bütçe <span class="highlight">Defterim</span></h1>
+                <div class="header-btns">
+                    <button id="theme-btn" class="icon-btn"><i class="ph ph-palette"></i></button>
+                    <button id="install-btn" class="icon-btn"><i class="ph ph-download-simple"></i></button>
+                </div>
+            </div>
+
+            <!-- Tema Menüsü -->
+            <div id="theme-menu" class="theme-menu hidden">
+                <div class="theme-opt indigo" data-theme="theme-indigo"></div>
+                <div class="theme-opt emerald" data-theme="theme-emerald"></div>
+                <div class="theme-opt rose" data-theme="theme-rose"></div>
+                <div class="theme-opt amber" data-theme="theme-amber"></div>
+            </div>
+            
+            <div id="reminder-container"></div>
+
+            <div class="stats-overview">
+                <div class="stat-card income">
+                    <label>Gelir</label>
+                    <span id="total-income">₺0.00</span>
+                </div>
+                <div class="stat-card expense">
+                    <label>Gider</label>
+                    <span id="total-expense">₺0.00</span>
+                </div>
+                <div class="stat-card balance">
+                    <label>Kalan</label>
+                    <span id="net-balance">₺0.00</span>
+                </div>
+            </div>
+
+            <div class="month-progress-container">
+                <div class="progress-info">
+                    <span id="current-month-name">-</span>
+                    <span id="month-percent">0% Harcandı</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill"></div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-page="add-page"><i class="ph ph-plus-circle"></i> Ekle</button>
+            <button class="tab-btn" data-page="list-page"><i class="ph ph-list-bullets"></i> Hareketler</button>
+            <button class="tab-btn" data-page="summary-page"><i class="ph ph-chart-pie"></i> Özet</button>
+        </nav>
+
+        <main>
+            <!-- Ekleme Sayfası -->
+            <section id="add-page" class="page">
+                <div class="input-card">
+                    <div class="type-selector">
+                        <button class="type-btn active income" data-type="income">GELİR</button>
+                        <button class="type-btn expense" data-type="expense">GİDER</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tutar (₺)</label>
+                        <input type="number" id="entry-amount" placeholder="0.00" inputmode="decimal">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <input type="text" id="entry-desc" placeholder="Maaş, Kira, Fatura vb.">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tarih</label>
+                        <input type="date" id="entry-date">
+                    </div>
+
+                    <div id="payment-status-group" class="form-group hidden">
+                        <label class="toggle-label">
+                            <span>Ödeme Yapıldı mı?</span>
+                            <input type="checkbox" id="entry-paid" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <button id="save-entry-btn" class="primary-btn">
+                        <i class="ph ph-check-circle"></i> Kaydet
+                    </button>
+                </div>
+            </section>
+
+            <!-- Liste Sayfası -->
+            <section id="list-page" class="page hidden">
+                <div class="list-filters">
+                    <select id="month-filter" class="styled-select"></select>
+                </div>
+                <div id="entries-list"></div>
+            </section>
+
+            <!-- Özet Sayfası -->
+            <section id="summary-page" class="page hidden">
+                <div id="monthly-stats-list"></div>
+                <button id="reset-data-btn" class="danger-btn">Verileri Sıfırla</button>
+            </section>
+        </main>
+
+        <footer>
+            <a href="https://fatihpatir.github.io/web" target="_blank">Fatih PATIR | Bilişim Teknolojileri</a>
+        </footer>
+    </div>
+
+    <!-- iOS Modalı -->
+    <div id="ios-modal" class="modal hidden">
+        <div class="modal-content">
+            <button id="close-modal">&times;</button>
+            <div class="ios-guide">
+                <i class="ph ph-apple-logo" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+                <h2>iPhone'a Yükle</h2>
+                <div class="step"><div class="num">1</div><p>Safari'de <strong>Paylaş</strong> <i class="ph ph-export"></i> butonuna basın.</p></div>
+                <div class="step"><div class="num">2</div><p><strong>Ana Ekrana Ekle</strong> butonuna basın.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+:root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --primary: #6366f1;
+    --income: #22c55e;
+    --expense: #ef4444;
+    --warning: #fbbf24;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.05);
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+/* Themes */
+.theme-indigo { --primary: #6366f1; }
+.theme-emerald { --primary: #10b981; }
+.theme-rose { --primary: #f43f5e; }
+.theme-amber { --primary: #fbbf24; }
+
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+}
+
+h1, h2, h3, .highlight { font-family: 'Outfit', sans-serif; }
+
+#app {
+    max-width: 500px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+header { margin-bottom: 25px; }
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+h1 { font-size: 22px; font-weight: 700; }
+.highlight { color: var(--primary); }
+
+.header-btns { display: flex; gap: 10px; }
+.icon-btn {
+    background: var(--card-bg); border: 1px solid var(--border); color: var(--text);
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px;
+}
+
+/* Theme Menu */
+.theme-menu {
+    display: flex; justify-content: center; gap: 15px;
+    background: var(--card-bg); padding: 12px; border-radius: 12px;
+    margin-bottom: 15px; border: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+}
+
+.theme-opt { width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
+.theme-opt.indigo { background: #6366f1; }
+.theme-opt.emerald { background: #10b981; }
+.theme-opt.rose { background: #f43f5e; }
+.theme-opt.amber { background: #fbbf24; }
+
+/* Reminders */
+#reminder-container { margin-bottom: 20px; }
+.reminder-card {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    padding: 15px; border-radius: 16px;
+    display: flex; align-items: center; gap: 12px;
+    color: var(--warning); font-size: 13px; font-weight: 600;
+}
+.reminder-card i { font-size: 24px; }
+
+/* Stats */
+.stats-overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat-card {
+    background: var(--card-bg); padding: 12px 5px; border-radius: 16px;
+    border: 1px solid var(--border); text-align: center;
+}
+.stat-card label { display: block; font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+.stat-card span { font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif; }
+.stat-card.income span { color: var(--income); }
+.stat-card.expense span { color: var(--expense); }
+.stat-card.balance span { color: var(--primary); }
+
+/* Progress */
+.month-progress-container { margin-top: 20px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 14px; border: 1px solid var(--border); }
+.progress-info { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); }
+.progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+#progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; }
+
+/* Tabs */
+.tabs { display: flex; background: var(--card-bg); padding: 5px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border); }
+.tab-btn { flex: 1; border: none; background: none; color: var(--text-muted); padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tab-btn.active { background: var(--primary); color: white; }
+
+/* Input Card */
+.input-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
+.type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+.type-btn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 700; cursor: pointer; }
+.type-btn.income.active { background: var(--income); color: white; }
+.type-btn.expense.active { background: var(--expense); color: white; }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; margin-left: 2px; }
+.form-group input { width: 100%; background: #0f172a; border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: white; outline: none; font-family: inherit; }
+
+/* Toggle Slider */
+.toggle-label { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.toggle-label input { display: none; }
+.slider { width: 44px; height: 24px; background: #334155; border-radius: 20px; position: relative; transition: 0.3s; }
+.slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+input:checked + .slider { background: var(--income); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+.primary-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+
+/* List Item */
+.entry-item { background: var(--card-bg); padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.entry-info { display: flex; flex-direction: column; gap: 2px; }
+.entry-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.entry-date { font-size: 10px; color: var(--text-muted); }
+.entry-amount { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; text-align: right; }
+.entry-amount.income { color: var(--income); }
+.entry-amount.expense { color: var(--expense); }
+.unpaid-badge { font-size: 9px; background: rgba(251, 191, 36, 0.1); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+/* Monthly Summary */
+.monthly-card { background: var(--card-bg); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+.monthly-card h3 { font-size: 14px; margin-bottom: 12px; color: var(--primary); }
+.monthly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.m-stat { padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.02); }
+.m-stat label { display: block; font-size: 8px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+.m-stat span { font-weight: 700; font-size: 13px; }
+
+.danger-btn { width: 100%; background: none; border: 1px solid var(--expense); color: var(--expense); padding: 12px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-size: 12px; font-weight: 600; }
+
+footer { text-align: center; padding: 30px 0 10px; margin-top: auto; }
+footer a { color: var(--text-muted); text-decoration: none; font-size: 10px; opacity: 0.6; }
+
+/* Modal */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: var(--card-bg); width: 85%; max-width: 350px; padding: 25px; border-radius: 24px; position: relative; border: 1px solid var(--border); text-align: center; }
+#close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.hidden { display: none !important; }
