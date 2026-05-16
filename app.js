@@ -278,7 +278,7 @@ function renderReminders() {
     if (diff <= 0) urgencyClass = 'overdue';
     if (diff === 0) urgencyClass = 'urgent';
 
-    const msg = `Bu ay ödenmemiş <strong>${count}</strong> gideriniz var. Görürüz mü?`;
+    const msg = `Bu ay ödenmemiş <strong>${count}</strong> gideriniz var. Detaylar için dokun.`;
 
     container.innerHTML = `
         <div class="reminder-card ${urgencyClass}" id="reminder-trigger" style="cursor:pointer">
