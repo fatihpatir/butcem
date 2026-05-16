@@ -9,7 +9,8 @@ let entries = storage.get('budge_v2_entries', []);
 let currentType = 'income';
 let currentTheme = storage.get('budge_v1_theme', 'theme-indigo');
 let listTypeFilter = 'all'; 
-let viewDate = new Date(); // Global görüntüleme tarihi
+let listStatusFilter = 'all'; // 'all', 'unpaid'
+let viewDate = new Date(); 
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -83,7 +84,8 @@ function initApp() {
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById(btn.dataset.page).classList.remove('hidden');
             if (btn.dataset.page === 'list-page') {
-                listTypeFilter = 'all'; // Tabdan girince filtreyi sıfırla
+                listTypeFilter = 'all'; 
+                listStatusFilter = 'all';
                 renderList();
             }
             if (btn.dataset.page === 'summary-page') renderSummary();
@@ -259,28 +261,38 @@ function renderReminders() {
     if (!container) return;
     container.innerHTML = '';
     
-    const unpaid = entries.filter(e => e.type === 'expense' && !e.isPaid);
+    const currentYM = viewDate.toISOString().substring(0, 7);
+    const unpaid = entries.filter(e => e.type === 'expense' && !e.isPaid && e.date.startsWith(currentYM));
+    
     if (unpaid.length === 0) return;
 
+    const count = unpaid.length;
+    let urgencyClass = '';
+    if (count > 0) urgencyClass = 'warning';
+
+    // En yakın olanı bul (tarih için)
     unpaid.sort((a,b) => new Date(a.date) - new Date(b.date));
     const next = unpaid[0];
     const diff = Math.ceil((new Date(next.date) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
 
-    let urgencyClass = '';
-    let msg = `<strong>${next.desc}</strong> ödemesine `;
+    if (diff <= 0) urgencyClass = 'overdue';
+    if (diff === 0) urgencyClass = 'urgent';
 
-    if (diff === 0) {
-        msg += "<strong>bugün son gün!</strong> ⚠️";
-        urgencyClass = 'urgent';
-    } else if (diff < 0) {
-        msg = `<strong>${next.desc}</strong> ödemesi <strong>${Math.abs(diff)} gün gecikti!</strong> ❌`;
-        urgencyClass = 'overdue';
-    } else {
-        msg += `<strong>${diff} gün kaldı</strong> ⏳`;
-        if (diff <= 3) urgencyClass = 'warning';
-    }
+    const msg = `Bu ay ödenmemiş <strong>${count}</strong> gideriniz var. Görürüz mü?`;
 
-    container.innerHTML = `<div class="reminder-card ${urgencyClass}"><i class="ph-fill ph-bell-ringing"></i><div>${msg}</div></div>`;
+    container.innerHTML = `
+        <div class="reminder-card ${urgencyClass}" id="reminder-trigger" style="cursor:pointer">
+            <i class="ph-fill ph-bell-ringing"></i>
+            <div style="flex:1">${msg}</div>
+            <i class="ph ph-caret-right"></i>
+        </div>
+    `;
+
+    document.getElementById('reminder-trigger').onclick = () => {
+        listTypeFilter = 'expense';
+        listStatusFilter = 'unpaid';
+        document.querySelector('[data-page="list-page"]').click();
+    };
 }
 
 function renderList() {
@@ -289,9 +301,14 @@ function renderList() {
 
     let filtered = entries.filter(e => e.date.startsWith(currentYM));
     
-    // Tip Filtresi Uygula (Gelir/Gider Kartından gelindiyse)
+    // Tip Filtresi Uygula
     if (listTypeFilter !== 'all') {
         filtered = filtered.filter(e => e.type === listTypeFilter);
+    }
+    
+    // Durum Filtresi Uygula
+    if (listStatusFilter === 'unpaid') {
+        filtered = filtered.filter(e => e.type === 'expense' && !e.isPaid);
     }
 
     listContainer.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding:50px; color:var(--text-muted)">Bu ay kayıt bulunmuyor.</div>' : '';
