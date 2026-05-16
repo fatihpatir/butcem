@@ -238,20 +238,36 @@ function renderStats() {
     document.getElementById('current-view-month').innerText = monthName;
     document.getElementById('current-month-name').innerText = monthName;
 
-    let mIncome = 0; let mExpense = 0;
+    let mIncome = 0; 
+    let mExpenseTotal = 0;
+    let mExpensePaid = 0;
 
     entries.forEach(e => {
         if (e.date.startsWith(currentYM)) {
-            if (e.type === 'income') mIncome += e.amount;
-            else mExpense += e.amount;
+            if (e.type === 'income') {
+                mIncome += e.amount;
+            } else {
+                mExpenseTotal += e.amount;
+                if (e.isPaid) mExpensePaid += e.amount;
+            }
         }
     });
 
-    document.getElementById('total-income').innerText = formatCurrency(mIncome);
-    document.getElementById('total-expense').innerText = formatCurrency(mExpense);
-    document.getElementById('net-balance').innerText = formatCurrency(mIncome - mExpense);
+    const currentCash = mIncome - mExpensePaid;
+    const projectedCash = mIncome - mExpenseTotal;
 
-    const percent = mIncome > 0 ? (mExpense / mIncome) * 100 : 0;
+    document.getElementById('total-income').innerText = formatCurrency(mIncome);
+    document.getElementById('total-expense').innerText = formatCurrency(mExpenseTotal);
+    document.getElementById('net-balance').innerText = formatCurrency(currentCash);
+    
+    const projectedEl = document.getElementById('projected-balance');
+    if (mExpenseTotal > mExpensePaid) {
+        projectedEl.innerText = `Ödemeler sonrası: ${formatCurrency(projectedCash)}`;
+    } else {
+        projectedEl.innerText = '';
+    }
+
+    const percent = mIncome > 0 ? (mExpenseTotal / mIncome) * 100 : 0;
     document.getElementById('progress-fill').style.width = Math.min(percent, 100) + '%';
     document.getElementById('month-percent').innerText = `%${percent.toFixed(0)} Harcandı`;
 }
