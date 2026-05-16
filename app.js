@@ -13,7 +13,41 @@ let currentTheme = storage.get('budge_v1_theme', 'theme-indigo');
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     applyTheme(currentTheme);
+    setupPWA();
 });
+
+function setupPWA() {
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+    if (!installBtn) return;
+    
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if (isStandalone) {
+        installBtn.style.display = 'none';
+    } else if (isIOS) {
+        installBtn.style.display = 'flex';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isStandalone) installBtn.style.display = 'flex';
+    });
+
+    installBtn.addEventListener('click', () => {
+        if (isIOS) {
+            document.getElementById('ios-modal').classList.remove('hidden');
+        } else if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') installBtn.style.display = 'none';
+                deferredPrompt = null;
+            });
+        }
+    });
+}
 
 function initApp() {
     document.getElementById('entry-date').valueAsDate = new Date();
@@ -25,7 +59,6 @@ function initApp() {
             btn.classList.add('active');
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById(btn.dataset.page).classList.remove('hidden');
-            
             if (btn.dataset.page === 'list-page') renderList();
             if (btn.dataset.page === 'summary-page') renderSummary();
         });
@@ -37,31 +70,20 @@ function initApp() {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentType = btn.dataset.type;
-            
-            // Gider ise ödeme durumunu göster
-            const paymentGroup = document.getElementById('payment-status-group');
-            if (currentType === 'expense') paymentGroup.classList.remove('hidden');
-            else paymentGroup.classList.add('hidden');
         });
     });
 
     // Theme Menu
-    document.getElementById('theme-btn').onclick = () => {
-        document.getElementById('theme-menu').classList.toggle('hidden');
-    };
-
+    document.getElementById('theme-btn').onclick = () => document.getElementById('theme-menu').classList.toggle('hidden');
     document.querySelectorAll('.theme-opt').forEach(opt => {
         opt.onclick = () => {
-            const theme = opt.dataset.theme;
-            applyTheme(theme);
+            applyTheme(opt.dataset.theme);
             document.getElementById('theme-menu').classList.add('hidden');
         };
     });
 
-    // Save / Update Entry
+    // Save / Update
     document.getElementById('save-entry-btn').onclick = saveOrUpdateEntry;
-    
-    // Cancel Edit
     document.getElementById('cancel-edit-btn').onclick = cancelEdit;
 
     // Filters
@@ -97,29 +119,23 @@ function saveOrUpdateEntry() {
     if (!amount || !desc || !date) return alert("Hocam tüm alanları dolduralım.");
 
     if (editingId) {
-        // Güncelleme
         const idx = entries.findIndex(e => e.id == editingId);
-        if (idx > -1) {
-            entries[idx] = { ...entries[idx], amount, desc, date };
-        }
+        if (idx > -1) entries[idx] = { ...entries[idx], amount, desc, date };
         cancelEdit();
     } else {
-        // Yeni Kayıt
-        const entry = {
+        entries.unshift({
             id: Date.now(),
             type: currentType,
             amount: amount,
             desc: desc,
             date: date,
             isPaid: currentType === 'income' ? true : false
-        };
-        entries.unshift(entry);
+        });
     }
 
     entries.sort((a, b) => new Date(b.date) - new Date(a.date));
     storage.set('budge_v2_entries', entries);
 
-    // Feedback
     const btn = document.getElementById('save-entry-btn');
     btn.innerHTML = '<i class="ph ph-check"></i> Tamamlandı!';
     setTimeout(() => {
@@ -138,17 +154,12 @@ function saveOrUpdateEntry() {
 function editEntry(id) {
     const entry = entries.find(e => e.id == id);
     if (!entry) return;
-
     document.getElementById('entry-amount').value = entry.amount;
     document.getElementById('entry-desc').value = entry.desc;
     document.getElementById('entry-date').value = entry.date;
     document.getElementById('editing-id').value = entry.id;
-
-    // UI Değişikliği
     document.getElementById('save-entry-btn').innerHTML = '<i class="ph ph-pencil"></i> Güncelle';
     document.getElementById('cancel-edit-btn').classList.remove('hidden');
-
-    // "Ekle" sayfasına yönlendir
     document.querySelector('[data-page="add-page"]').click();
 }
 
@@ -179,7 +190,6 @@ function renderStats() {
     entries.forEach(e => {
         if (e.type === 'income') income += e.amount;
         else expense += e.amount;
-
         if (e.date.startsWith(currentYM)) {
             if (e.type === 'income') mIncome += e.amount;
             else mExpense += e.amount;
@@ -190,7 +200,6 @@ function renderStats() {
     document.getElementById('total-expense').innerText = formatCurrency(expense);
     document.getElementById('net-balance').innerText = formatCurrency(income - expense);
 
-    // Progress
     const monthName = now.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
     document.getElementById('current-month-name').innerText = monthName;
     const percent = mIncome > 0 ? (mExpense / mIncome) * 100 : 0;
@@ -201,30 +210,19 @@ function renderStats() {
 function renderReminders() {
     const container = document.getElementById('reminder-container');
     container.innerHTML = '';
-
     const unpaid = entries.filter(e => e.type === 'expense' && !e.isPaid);
     if (unpaid.length === 0) return;
 
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    // En yakın ödemeyi bul
     unpaid.sort((a,b) => new Date(a.date) - new Date(b.date));
     const next = unpaid[0];
-    const dueDate = new Date(next.date);
-    const diff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil((new Date(next.date) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
 
     let msg = `Gelecek Ödeme: <strong>${next.desc}</strong>`;
     if (diff === 0) msg += " (Bugün Son Gün!) ⚠️";
     else if (diff < 0) msg += ` (${Math.abs(diff)} gün gecikti!) ❌`;
     else msg += ` (${diff} gün kaldı) ⏳`;
 
-    container.innerHTML = `
-        <div class="reminder-card">
-            <i class="ph-fill ph-bell-ringing"></i>
-            <div>${msg}</div>
-        </div>
-    `;
+    container.innerHTML = `<div class="reminder-card"><i class="ph-fill ph-bell-ringing"></i><div>${msg}</div></div>`;
 }
 
 function renderList() {
@@ -236,10 +234,8 @@ function renderList() {
         const currentVal = filter.value;
         filter.innerHTML = '<option value="all">Tüm Zamanlar</option>';
         months.forEach(m => {
-            const [year, month] = m.split('-');
-            const dateObj = new Date(year, month - 1);
-            const name = dateObj.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
-            filter.innerHTML += `<option value="${m}">${name}</option>`;
+            const dateObj = new Date(m.split('-')[0], m.split('-')[1]-1);
+            filter.innerHTML += `<option value="${m}">${dateObj.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}</option>`;
         });
         filter.value = currentVal || 'all';
     }
@@ -250,10 +246,7 @@ function renderList() {
     filtered.forEach(e => {
         const div = document.createElement('div');
         div.className = 'entry-item';
-        
-        let subText = '';
-        let statusIcon = '';
-        
+        let subText = ''; let statusIcon = '';
         if (e.type === 'expense') {
             if (!e.isPaid) {
                 const diff = Math.ceil((new Date(e.date) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
@@ -264,28 +257,12 @@ function renderList() {
                 statusIcon = `<div class="status-tick paid" onclick="event.stopPropagation(); togglePaid(${e.id})"><i class="ph-fill ph-check-circle"></i></div>`;
             }
         } else {
-            // Gelir ise ikon gösterme veya farklı bir şey göster
             statusIcon = `<div class="status-tick" style="color:var(--income); opacity:0.5; cursor:default;"><i class="ph ph-trend-up"></i></div>`;
         }
 
-        div.innerHTML = `
-            ${statusIcon}
-            <div class="entry-info">
-                <span class="entry-title">${e.desc}</span>
-                <span class="entry-date">${new Date(e.date).toLocaleDateString('tr-TR')}</span>
-                ${subText}
-            </div>
-            <div class="entry-amount-actions">
-                <div class="entry-amount ${e.type}">
-                    ${e.type === 'income' ? '+' : '-'}${formatCurrency(e.amount)}
-                </div>
-                <div class="entry-actions">
-                    <i class="ph ph-pencil action-btn" onclick="editEntry(${e.id})"></i>
-                    <i class="ph ph-trash action-btn delete" onclick="deleteEntry(${e.id})"></i>
-                </div>
-            </div>
-        `;
-        
+        div.innerHTML = `${statusIcon}<div class="entry-info"><span class="entry-title">${e.desc}</span><span class="entry-date">${new Date(e.date).toLocaleDateString('tr-TR')}</span>${subText}</div>
+            <div class="entry-amount-actions"><div class="entry-amount ${e.type}">${e.type === 'income' ? '+' : '-'}${formatCurrency(e.amount)}</div>
+            <div class="entry-actions"><i class="ph ph-pencil action-btn" onclick="editEntry(${e.id})"></i><i class="ph ph-trash action-btn delete" onclick="deleteEntry(${e.id})"></i></div></div>`;
         listContainer.appendChild(div);
     });
 }
@@ -303,13 +280,6 @@ function togglePaid(id) {
 function renderSummary() {
     const container = document.getElementById('monthly-stats-list');
     container.innerHTML = '';
-    const groups = {};
-    entries.forEach(e => {
-        const m = e.date.substring(0, 7);
-        if (!groups[m]) groups[m] = { income: 0, expense: 0 };
-        groups[e.type === 'income' ? 'income' : 'expense'] += e.amount; // Bu satırda hata vardı, düzeltildi
-    });
-    // Doğru gruplama mantığı:
     const monthlyGroups = {};
     entries.forEach(e => {
         const m = e.date.substring(0, 7);
@@ -319,18 +289,14 @@ function renderSummary() {
     });
 
     Object.keys(monthlyGroups).sort().reverse().forEach(m => {
-        const [y, mon] = m.split('-');
-        const name = new Date(y, mon-1).toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+        const name = new Date(m.split('-')[0], m.split('-')[1]-1).toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
         const s = monthlyGroups[m];
         const card = document.createElement('div');
         card.className = 'monthly-card';
         card.innerHTML = `<h3>${name}</h3><div class="monthly-grid">
             <div class="m-stat"><label>Gelir</label><span style="color:var(--income)">+${formatCurrency(s.income)}</span></div>
             <div class="m-stat"><label>Gider</label><span style="color:var(--expense)">-${formatCurrency(s.expense)}</span></div>
-            <div class="m-stat" style="grid-column:span 2; margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
-                <label>Net Durum</label><span>${formatCurrency(s.income - s.expense)}</span>
-            </div>
-        </div>`;
+            <div class="m-stat" style="grid-column:span 2; margin-top:10px; border-top:1px solid var(--border); padding-top:10px;"><label>Net Durum</label><span>${formatCurrency(s.income - s.expense)}</span></div></div>`;
         container.appendChild(card);
     });
 }
